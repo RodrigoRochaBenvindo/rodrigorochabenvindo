@@ -3,6 +3,7 @@
 **`Desenvolvedor Power Platform`**
 
 Me chamo Rodrigo da Rocha Benvindo, natural do Estado do Espirito Santo. Profissional com mais de 5 anos de experiência sólida em desenvolvimento de soluções utilizando a Microsoft Power Platform, com ênfase em Power Apps e Power Automate. Durante esse período, desenvolvi mais de 100 Soluções contendo diversas aplicações e fluxos automatizados, promovendo integrações eficientes com SharePoint, Dataverse, SQL Server e APIs internas e externas, sempre com foco em escalabilidade, padronização e valor ao negócio.
+
 ---
 
 ### 🤖 Linguagens e Tecnologias
