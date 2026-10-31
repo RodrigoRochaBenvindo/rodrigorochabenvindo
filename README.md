@@ -56,5 +56,3 @@ Me chamo Rodrigo, natural do Estado do Espirito Santo. Profissional com mais de 
     style="padding-right: 10px;" 
     src="https://img.icons8.com/?size=100&id=eWTTfJ5bsN08&format=png&color=000000" 
 />
-
-.
