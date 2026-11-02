@@ -1,0 +1,15 @@
+<environmentvariabledefinition schemaname="lowcode_shared_sharepointonline_0212d7da9cdc43dda752c82c1efdc296">
+  <apiid>/providers/microsoft.powerapps/apis/shared_sharepointonline</apiid>
+  <displayname default="[Variavel] Default-Notification">
+    <label description="[Variavel] Default-Notification" languagecode="1046" />
+  </displayname>
+  <introducedversion>1.0.0.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <parameterkey>table</parameterkey>
+  <parentdefinitionid>
+    <schemaname>lowcode_V_AmbienteMapaDePneus</schemaname>
+  </parentdefinitionid>
+  <secretstore>0</secretstore>
+  <type>100000004</type>
+</environmentvariabledefinition>

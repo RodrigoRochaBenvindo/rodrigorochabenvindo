@@ -1,0 +1,434 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "api": {
+          "name": "shared_sharepointonline"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "lowcode_sharedsharepointonline_98d82"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_office365_1": {
+        "api": {
+          "name": "shared_office365"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "lowcode_ConnectionAppsOutlook"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_teams": {
+        "api": {
+          "name": "shared_teams"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "lowcode_ConectorDefaultMicrosoftTeams"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "undefined",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "[Variavel] Repositorio - Ambiente (lowcode_VariavelRepositorioAmbiente)": {
+          "defaultValue": "Desenvolvimento",
+          "type": "String",
+          "metadata": {
+            "schemaName": "lowcode_VariavelRepositorioAmbiente"
+          }
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "Button",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "description": "Please enter your input",
+                  "title": "JSON",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_1": {
+                  "description": "Please enter your input",
+                  "title": "NomeDoFluxo",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "email": {
+                  "title": "UsuarioAfetado",
+                  "type": "string",
+                  "format": "email",
+                  "x-ms-dynamically-added": true,
+                  "description": "Digite um endereço de email",
+                  "x-ms-content-hint": "EMAIL"
+                }
+              },
+              "required": [
+                "text",
+                "text_1"
+              ]
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "69b5d71b-5b7a-4f1f-a7cf-321fffe1c4c9"
+          }
+        }
+      },
+      "actions": {
+        "Registrar_Falha_na_lista_de_Log_-_Try": {
+          "type": "Scope",
+          "actions": {
+            "Analisar_JSON": {
+              "type": "ParseJson",
+              "inputs": {
+                "content": "@triggerBody()?['text']",
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "code": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "error": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "metadata": {
+                "operationMetadataId": "47796d63-de83-40b2-92f0-4b7c70d802f9"
+              }
+            },
+            "Filtrar_Itens_que_falharam": {
+              "type": "Query",
+              "inputs": {
+                "from": "@body('Analisar_JSON')",
+                "where": "@equals(item()['status'],'Failed')"
+              },
+              "runAfter": {
+                "Analisar_JSON": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "e5b945d1-fce5-4a7c-8a0e-c47d799bb46d"
+              }
+            },
+            "Aplicar_a_cada_Item_que_falhou": {
+              "type": "Foreach",
+              "foreach": "@body('Filtrar_Itens_que_falharam')",
+              "actions": {
+                "Retirar_aspas_do_nome_do_componente": {
+                  "type": "Compose",
+                  "inputs": "@replace(items('Aplicar_a_cada_Item_que_falhou')?['name'],'\"','''')",
+                  "metadata": {
+                    "operationMetadataId": "07c306c2-5dcd-4d63-8893-de272a5e5819"
+                  }
+                },
+                "Condição": {
+                  "type": "If",
+                  "expression": {
+                    "and": [
+                      {
+                        "equals": [
+                          "@empty(triggerBody()?['email'])",
+                          "@true"
+                        ]
+                      }
+                    ]
+                  },
+                  "actions": {
+                    "Criar_Item_-_Lista_Log_de_Erros": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "parameters": {
+                          "dataset": "https://autoglass365.sharepoint.com/sites/portal-appcorp/equipe",
+                          "table": "e802b8ed-8a1f-42d5-8921-c697a8ef7bcb",
+                          "item/Title": "@triggerBody()?['text_1']",
+                          "item/Componente": "@outputs('Retirar_aspas_do_nome_do_componente')",
+                          "item/Code": "@items('Aplicar_a_cada_Item_que_falhou')?['code']",
+                          "item/Erro": "@if(empty(items('Aplicar_a_cada_item_que_falhou')?['error']?['message']), 'Not Found', items('Aplicar_a_cada_item_que_falhou')?['error']?['message'])",
+                          "item/Ambiente": "@parameters('[Variavel] Repositorio - Ambiente (lowcode_VariavelRepositorioAmbiente)')"
+                        },
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                          "operationId": "PostItem",
+                          "connectionName": "shared_sharepointonline"
+                        }
+                      },
+                      "metadata": {
+                        "operationMetadataId": "bfbbb258-0cb2-4356-bc1d-2d7dac5afad5"
+                      }
+                    }
+                  },
+                  "else": {
+                    "actions": {
+                      "Criar_Item_-_Lista_Log_de_Erros_-_Sem_Email": {
+                        "type": "OpenApiConnection",
+                        "inputs": {
+                          "parameters": {
+                            "dataset": "https://autoglass365.sharepoint.com/sites/portal-appcorp/equipe",
+                            "table": "e802b8ed-8a1f-42d5-8921-c697a8ef7bcb",
+                            "item/Title": "@triggerBody()?['text_1']",
+                            "item/Componente": "@outputs('Retirar_aspas_do_nome_do_componente')",
+                            "item/Code": "@items('Aplicar_a_cada_Item_que_falhou')?['code']",
+                            "item/Erro": "@if(empty(items('Aplicar_a_cada_item_que_falhou')?['error']?['message']), 'Not Found', items('Aplicar_a_cada_item_que_falhou')?['error']?['message'])",
+                            "item/Ambiente": "@parameters('[Variavel] Repositorio - Ambiente (lowcode_VariavelRepositorioAmbiente)')",
+                            "item/UsuarioAfetado": "@triggerBody()['email']"
+                          },
+                          "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                            "operationId": "PostItem",
+                            "connectionName": "shared_sharepointonline"
+                          }
+                        },
+                        "metadata": {
+                          "operationMetadataId": "bfbbb258-0cb2-4356-bc1d-2d7dac5afad5"
+                        }
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "Retirar_aspas_do_nome_do_componente": [
+                      "Succeeded"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "3655ec92-3247-4b43-8658-3f86ceb75c60"
+                  }
+                }
+              },
+              "runAfter": {
+                "Filtrar_Itens_que_falharam": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "a29c87a6-18ba-4135-8f3b-47201fccb856"
+              }
+            }
+          },
+          "runAfter": {
+            "Inicializar_variável": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "d580f95f-5725-4bb3-bdb3-676ac157a99e"
+          }
+        },
+        "Catch": {
+          "type": "Scope",
+          "actions": {
+            "Pegar_Resultado_do_Escopo_de_Registro": {
+              "type": "Compose",
+              "inputs": "@result('Registrar_Falha_na_lista_de_Log_-_Try')",
+              "metadata": {
+                "operationMetadataId": "20371917-9652-4722-aff6-fcc5ecf563bd"
+              }
+            },
+            "Filtrar_Itens_que_falharam_-_Catch": {
+              "type": "Query",
+              "inputs": {
+                "from": "@outputs('Pegar_Resultado_do_Escopo_de_Registro')",
+                "where": "@equals(item()?['status'], 'Failed')"
+              },
+              "runAfter": {
+                "Pegar_Resultado_do_Escopo_de_Registro": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "6e9d5477-8b29-4e2f-a350-0e865fbf5f88"
+              }
+            },
+            "Aplicar_a_cada_Item_que_falhou_-_Catch": {
+              "type": "Foreach",
+              "foreach": "@body('Filtrar_Itens_que_falharam')",
+              "actions": {
+                "Enviar_um_email_-_Catch": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "emailMessage/To": "luiz.lourenco@grupoautoglass.com.br",
+                      "emailMessage/Subject": "Notificação de Falha - Fluxo 'Repositorio-Manual-RegistrarLogFalha'",
+                      "emailMessage/Body": "<!-- Email de Notificação de Falha - Template -->\n<!doctype html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n  <title>Erro no fluxo</title>\n  <style>\n    body {font-family: Arial, sans-serif; background:#f4f6f8; margin:0; padding:20px;}\n    .card {max-width:700px; margin:0 auto; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.08); overflow:hidden;}\n    .header {background:#d32f2f; color:white; padding:16px 20px;}\n    .header h1 {margin:0; font-size:18px;}\n    .body {padding:20px; color:#222;}\n    .row {display:flex; flex-wrap:wrap; gap:12px; margin-bottom:12px;}\n    .label {font-weight:600; width:150px; color:#555;}\n    .value {flex:1; color:#111;}\n    .pre {background:#f7f7f7; border:1px solid #eee; padding:12px; border-radius:6px; font-family:monospace; white-space:pre-wrap; color:#333;}\n    .actions {padding:16px 20px 24px; text-align:right;}\n    .btn {display:inline-block; padding:10px 14px; border-radius:6px; text-decoration:none; font-weight:600;}\n    .btn-view {background:#1976d2; color:#fff;}\n    .btn-ack {background:#e0e0e0; color:#111; margin-right:8px;}\n    .footer {padding:12px 20px; font-size:12px; color:#777; background:#fafafa; border-top:1px solid #eee;}\n    @media(max-width:480px){ .label{width:100%;} .row{flex-direction:column;} .actions{text-align:center;} }\n  </style>\n</head>\n<body>\n  <div class=\"card\">\n    <div class=\"header\">\n      <h1>⚠️ Falha detectada: [Fluxo] Repositorio-Manual-RegistrarLogFalha</h1>\n    </div>\n\n    <div class=\"body\">\n      <p>Uma execução do fluxo <strong>[Fluxo] Repositorio-Manual-RegistrarLogFalha</strong> apresentou erro.</p>\n\n      <div class=\"row\">\n        <div class=\"label\">Ambiente @{parameters('[Variavel] Repositorio - Ambiente (lowcode_VariavelRepositorioAmbiente)')}</div>\n        <div class=\"value\"></div>\n      </div>\n\n      <div style=\"margin-top:12px;\">\n        <div class=\"label\" style=\"margin-bottom:6px;\">Mensagem de Erro</div>\n        <div class=\"pre\">@{items('Aplicar_a_cada_Item_que_falhou_-_Catch')?['code']}</div>\n      </div>\n\n      <div style=\"margin-top:12px;\">\n        <div class=\"label\" style=\"margin-bottom:6px;\">Detalhes</div>\n        <div class=\"pre\">@{items('Aplicar_a_cada_Item_que_falhou_-_Catch')?['error']?['message']}</div>\n      </div>\n    </div>\n\n    <div class=\"footer\">\n      Este é um alerta automático — por favor verifique o fluxo e corrija a causa da falha. &nbsp;|&nbsp; Gerado por: Power Automate\n    </div>\n  </div>\n</body>\n</html>\n",
+                      "emailMessage/Importance": "Normal"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                      "operationId": "SendEmailV2",
+                      "connectionName": "shared_office365_1"
+                    }
+                  },
+                  "runAfter": {
+                    "Criar_Item_-_Catch": [
+                      "Succeeded"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "b477ec37-073b-4d10-b378-a76134dc8a7b"
+                  }
+                },
+                "Postar_cartão_no_canal_da_equipe_-_Catch": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "poster": "Flow bot",
+                      "location": "Chat with Flow bot",
+                      "body/recipient": "luiz.lourenco@grupoautoglass.com.br;",
+                      "body/messageBody": "{\n  \"$schema\": \"http://adaptivecards.io/schemas/adaptive-card.json\",\n  \"type\": \"AdaptiveCard\",\n  \"version\": \"1.4\",\n  \"body\": [\n    {\n      \"type\": \"Container\",\n      \"style\": \"emphasis\",\n      \"items\": [\n        {\n          \"type\": \"TextBlock\",\n          \"text\": \"⚠️ Falha no fluxo\",\n          \"weight\": \"Bolder\",\n          \"size\": \"Medium\",\n          \"wrap\": true\n        },\n        {\n          \"type\": \"TextBlock\",\n          \"text\": \"**[Fluxo] Repositorio-Manual-RegistrarLogFalha**\",\n          \"wrap\": true,\n          \"spacing\": \"None\"\n        }\n      ]\n    },\n    {\n      \"type\": \"FactSet\",\n      \"facts\": [\n        {\n          \"title\": \"Ambiente:\",\n          \"value\": \"@{parameters('[Variavel] Repositorio - Ambiente (lowcode_VariavelRepositorioAmbiente)')}\"\n        }\n      ]\n    },\n {\n      \"type\": \"TextBlock\",\n      \"text\": \"Componente\",\n      \"weight\": \"Bolder\",\n      \"spacing\": \"Medium\",\n      \"wrap\": true\n    },\n    {\n      \"type\": \"TextBlock\",\n      \"text\": \"@{items('Aplicar_a_cada_Item_que_falhou_-_Catch')?['name']}\",\n      \"wrap\": true,\n      \"maxLines\": 5,\n      \"spacing\": \"None\"\n    },\n    {\n      \"type\": \"TextBlock\",\n      \"text\": \"Mensagem de erro\",\n      \"weight\": \"Bolder\",\n      \"spacing\": \"Medium\",\n      \"wrap\": true\n    },\n    {\n      \"type\": \"TextBlock\",\n      \"text\": \"@{items('Aplicar_a_cada_Item_que_falhou_-_Catch')?['code']}\",\n      \"wrap\": true,\n      \"maxLines\": 5,\n      \"spacing\": \"None\"\n    },\n    {\n      \"type\": \"TextBlock\",\n      \"text\": \"Detalhes\",\n      \"weight\": \"Bolder\",\n      \"spacing\": \"Medium\",\n      \"wrap\": true\n    },\n    {\n      \"type\": \"TextBlock\",\n      \"text\": \"@{items('Aplicar_a_cada_Item_que_falhou_-_Catch')?['error']?['message']}\",\n      \"wrap\": true,\n      \"maxLines\": 8\n    }\n  ]\n}\n"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+                      "operationId": "PostCardToConversation",
+                      "connectionName": "shared_teams"
+                    }
+                  },
+                  "runAfter": {
+                    "Enviar_um_email_-_Catch": [
+                      "Succeeded"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "5e0e4d8b-fae6-4488-9304-074ced234e2c"
+                  }
+                },
+                "Criar_Item_-_Catch": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "dataset": "https://autoglass365.sharepoint.com/sites/portal-appcorp/equipe",
+                      "table": "e802b8ed-8a1f-42d5-8921-c697a8ef7bcb",
+                      "item/Title": "[Fluxo] Default-Manual-RegistrarLogFalha",
+                      "item/Componente": "@items('Aplicar_a_cada_Item_que_falhou_-_Catch')?['name']",
+                      "item/Code": "@items('Aplicar_a_cada_Item_que_falhou_-_Catch')?['code']",
+                      "item/Erro": "@items('Aplicar_a_cada_Item_que_falhou_-_Catch')?['error']?['message']",
+                      "item/Ambiente": "@parameters('[Variavel] Repositorio - Ambiente (lowcode_VariavelRepositorioAmbiente)')"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                      "operationId": "PostItem",
+                      "connectionName": "shared_sharepointonline"
+                    }
+                  },
+                  "metadata": {
+                    "operationMetadataId": "ea356e85-ff56-4ad9-9b8c-140890908443"
+                  }
+                }
+              },
+              "runAfter": {
+                "Filtrar_Itens_que_falharam_-_Catch": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "68eca29f-2271-4bd4-9d14-844e8ecf926b"
+              }
+            }
+          },
+          "runAfter": {
+            "Registrar_Falha_na_lista_de_Log_-_Try": [
+              "Failed"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "9bda677f-b6a1-4899-9de3-e42c37a0ccef"
+          }
+        },
+        "Respond_to_a_Power_App_or_flow_-_Error": {
+          "type": "Response",
+          "kind": "PowerApp",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {},
+              "additionalProperties": {}
+            },
+            "statusCode": 200,
+            "body": {}
+          },
+          "runAfter": {
+            "Catch": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "784e30bf-166b-4279-9668-01ce153106b1"
+          }
+        },
+        "Respond_to_a_Power_App_or_flow_-_Sucesso": {
+          "type": "Response",
+          "kind": "PowerApp",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {},
+              "additionalProperties": {}
+            },
+            "statusCode": 200,
+            "body": {}
+          },
+          "runAfter": {
+            "Registrar_Falha_na_lista_de_Log_-_Try": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "a39859ba-b68f-4299-ac82-7de4a5c96a6e"
+          }
+        },
+        "Inicializar_variável": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "DestinatariosEmail",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "527c993b-8162-4ed4-b539-2688d6152435"
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

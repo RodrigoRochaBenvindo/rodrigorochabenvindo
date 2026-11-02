@@ -1,0 +1,221 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "api": {
+          "name": "shared_sharepointonline"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "lowcode_sharedsharepointonline_98d82"
+        },
+        "runtimeSource": "invoker"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "[Variavel] Default - Site Equipe Aplicacoes Ageis (lowcode_V_AmbienteMapaDePneus)": {
+          "defaultValue": "https://autoglass365.sharepoint.com/sites/portal-appcorp/equipe/bdTestes",
+          "type": "String",
+          "metadata": {
+            "schemaName": "lowcode_V_AmbienteMapaDePneus"
+          }
+        },
+        "[Variavel] Default - Ambiente Nome (lowcode_VariavelRepositorioAmbiente)": {
+          "defaultValue": "Desenvolvimento",
+          "type": "String",
+          "metadata": {
+            "schemaName": "lowcode_VariavelRepositorioAmbiente"
+          }
+        },
+        "[Variavel] Default - LogEntradaUsuario (lowcode_shared_sharepointonline_986e6a0b0dfd4b6cbe8d53f8ae38cdd4)": {
+          "defaultValue": "f3e75826-e1d3-4f9e-a35f-1395738cf1fc",
+          "type": "String",
+          "metadata": {
+            "schemaName": "lowcode_shared_sharepointonline_986e6a0b0dfd4b6cbe8d53f8ae38cdd4"
+          }
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "PowerAppV2",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "title": "Colaborador",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Insira sua entrada",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "text_1": {
+                  "title": "Aplicacao",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Insira sua entrada",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "text_2": {
+                  "title": "Dispositivo",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Insira sua entrada",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "text_3": {
+                  "title": "Versao",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Insira sua entrada",
+                  "x-ms-content-hint": "TEXT"
+                }
+              },
+              "required": [
+                "text",
+                "text_1",
+                "text_2",
+                "text_3"
+              ]
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "050e16ff-f8d1-42bc-bdbd-dc75e2018694"
+          }
+        }
+      },
+      "actions": {
+        "Escopo": {
+          "type": "Scope",
+          "actions": {
+            "Analisar_JSON_-_Colaborador": {
+              "type": "ParseJson",
+              "inputs": {
+                "content": "@triggerBody()?['text']",
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "aboutMe": {},
+                    "accountEnabled": {
+                      "type": "boolean"
+                    },
+                    "birthday": {
+                      "type": "string"
+                    },
+                    "businessPhones": {
+                      "type": "array"
+                    },
+                    "city": {},
+                    "companyName": {},
+                    "country": {},
+                    "department": {},
+                    "displayName": {
+                      "type": "string"
+                    },
+                    "givenName": {
+                      "type": "string"
+                    },
+                    "hireDate": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "interests": {
+                      "type": "array"
+                    },
+                    "jobTitle": {},
+                    "mail": {
+                      "type": "string"
+                    },
+                    "mailNickname": {
+                      "type": "string"
+                    },
+                    "mobilePhone": {},
+                    "mySite": {
+                      "type": "string"
+                    },
+                    "officeLocation": {},
+                    "pastProjects": {
+                      "type": "array"
+                    },
+                    "postalCode": {},
+                    "preferredLanguage": {},
+                    "preferredName": {
+                      "type": "string"
+                    },
+                    "responsibilities": {
+                      "type": "array"
+                    },
+                    "schools": {
+                      "type": "array"
+                    },
+                    "skills": {
+                      "type": "array"
+                    },
+                    "state": {},
+                    "streetAddress": {},
+                    "surname": {},
+                    "userPrincipalName": {
+                      "type": "string"
+                    },
+                    "userType": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "metadata": {
+                "operationMetadataId": "9f25d554-46a1-4f07-8666-69abe772f78a"
+              }
+            },
+            "Criar_item_-_appLogEntradaUsuario": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "@parameters('[Variavel] Default - Site Equipe Aplicacoes Ageis (lowcode_V_AmbienteMapaDePneus)')",
+                  "table": "@parameters('[Variavel] Default - LogEntradaUsuario (lowcode_shared_sharepointonline_986e6a0b0dfd4b6cbe8d53f8ae38cdd4)')",
+                  "item/Title": "@body('Analisar_JSON_-_Colaborador')?['userPrincipalName']",
+                  "item/Colaborador": "@body('Analisar_JSON_-_Colaborador')?['displayName']",
+                  "item/Departamento": "@body('Analisar_JSON_-_Colaborador')?['department']",
+                  "item/Aplicacao": "@triggerBody()?['text_1']",
+                  "item/Data_x0020_Referencia": "@utcNow()",
+                  "item/Dispositivo": "@triggerBody()?['text_2']",
+                  "item/Versao": "@triggerBody()?['text_3']",
+                  "item/Ambiente": "@parameters('[Variavel] Default - Ambiente Nome (lowcode_VariavelRepositorioAmbiente)')"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "operationId": "PostItem",
+                  "connectionName": "shared_sharepointonline"
+                }
+              },
+              "runAfter": {
+                "Analisar_JSON_-_Colaborador": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "aa4b3962-b1ad-4048-859a-20959367cb16"
+              }
+            }
+          },
+          "runAfter": {}
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

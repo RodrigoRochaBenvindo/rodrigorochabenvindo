@@ -1,0 +1,14 @@
+<environmentvariabledefinition schemaname="lowcode_FluxoDefaultGoogleMapsApiKey">
+  <defaultvalue>AIzaSyBRtgMb-iRHPHsD14j4e8dUW2oi_yiuqJ8</defaultvalue>
+  <description default="Api Key da da conta google da Power Platform">
+    <label description="Api Key da da conta google da Power Platform" languagecode="1046" />
+  </description>
+  <displayname default="[Variavel] Default-GoogleMapsApiKey">
+    <label description="[Variavel] Default-GoogleMapsApiKey" languagecode="1046" />
+  </displayname>
+  <introducedversion>2.0.0.14</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000000</type>
+</environmentvariabledefinition>

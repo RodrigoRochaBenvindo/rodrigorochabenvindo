@@ -1,0 +1,14 @@
+<environmentvariabledefinition schemaname="lowcode_varAmbiente">
+  <defaultvalue>c7638ba7-d72a-487a-8d61-adf05fabd3fd</defaultvalue>
+  <description default="Variável de ambiente para definir qual o ambiente o aplicarivo está acessando">
+    <label description="Variável de ambiente para definir qual o ambiente o aplicarivo está acessando" languagecode="1046" />
+  </description>
+  <displayname default="[Variavel] Default - Ambiente Guid">
+    <label description="[Variavel] Default - Ambiente Guid" languagecode="1046" />
+  </displayname>
+  <introducedversion>1.0.1.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000000</type>
+</environmentvariabledefinition>

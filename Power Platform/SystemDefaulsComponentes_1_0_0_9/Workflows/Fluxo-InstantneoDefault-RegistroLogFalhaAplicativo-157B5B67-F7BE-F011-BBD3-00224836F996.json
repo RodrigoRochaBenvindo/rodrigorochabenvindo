@@ -1,0 +1,150 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline-1": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "lowcode_sharedsharepointonline_98d82"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "[Variavel] Default - SIte Equipe Aplicacoes Ageis (lowcode_V_AmbienteMapaDePneus)": {
+          "defaultValue": "https://autoglass365.sharepoint.com/sites/portal-appcorp/equipe",
+          "type": "String",
+          "metadata": {
+            "schemaName": "lowcode_V_AmbienteMapaDePneus"
+          }
+        },
+        "[Variavel] Default - logErrosEmFluxos (lowcode_shared_sharepointonline_eecf47deef114d8485b08f488b12dda4)": {
+          "defaultValue": "e802b8ed-8a1f-42d5-8921-c697a8ef7bcb",
+          "type": "String",
+          "metadata": {
+            "schemaName": "lowcode_shared_sharepointonline_eecf47deef114d8485b08f488b12dda4"
+          }
+        },
+        "[Variavel] Repositorio - Ambiente (lowcode_VariavelRepositorioAmbiente)": {
+          "defaultValue": "Desenvolvimento",
+          "type": "String",
+          "metadata": {
+            "schemaName": "lowcode_VariavelRepositorioAmbiente"
+          }
+        }
+      },
+      "triggers": {
+        "manual": {
+          "metadata": {
+            "operationMetadataId": "d781e7ca-6243-4500-9910-f7ede7e6297e"
+          },
+          "type": "Request",
+          "kind": "PowerAppV2",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "title": "Code",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Insira sua entrada",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "text_1": {
+                  "title": "Componente",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Insira sua entrada",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "text_2": {
+                  "title": "Erro",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Insira sua entrada",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "text_3": {
+                  "title": "Title",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Insira sua entrada",
+                  "x-ms-content-hint": "TEXT"
+                }
+              },
+              "required": [
+                "text",
+                "text_1",
+                "text_2",
+                "text_3"
+              ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "Escopo": {
+          "actions": {
+            "Compor": {
+              "runAfter": {},
+              "metadata": {
+                "operationMetadataId": "59307ae2-c541-4092-a932-a220129e8e1b"
+              },
+              "type": "Compose",
+              "inputs": "@triggerOutputs()?['headers']?['x-ms-user-email']"
+            },
+            "Create_item": {
+              "runAfter": {
+                "Compor": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "7e640853-4d5d-4fc2-8939-4d5ffa42036b"
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline-1",
+                  "operationId": "PostItem",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('[Variavel] Default - SIte Equipe Aplicacoes Ageis (lowcode_V_AmbienteMapaDePneus)')",
+                  "table": "@parameters('[Variavel] Default - logErrosEmFluxos (lowcode_shared_sharepointonline_eecf47deef114d8485b08f488b12dda4)')",
+                  "item/Title": "@triggerBody()['text_3']",
+                  "item/Componente": "@triggerBody()['text_1']",
+                  "item/Code": "@triggerBody()['text']",
+                  "item/Erro": "@triggerBody()['text_2']",
+                  "item/Ambiente": "@parameters('[Variavel] Repositorio - Ambiente (lowcode_VariavelRepositorioAmbiente)')",
+                  "item/UsuarioAfetado": "@triggerOutputs()?['headers']?['x-ms-user-email']"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            }
+          },
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "f645cd4e-8b4e-42e8-a4dd-af6d7590891c"
+          },
+          "type": "Scope"
+        }
+      }
+    },
+    "templateName": ""
+  },
+  "schemaVersion": "1.0.0.0"
+}

@@ -1,0 +1,67 @@
+{
+  "properties": {
+    "connectionReferences": {},
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "[Variavel] Default - Ambiente Atual (lowcode_varAmbiente)": {
+          "defaultValue": "c7638ba7-d72a-487a-8d61-adf05fabd3fd",
+          "type": "String",
+          "metadata": {
+            "schemaName": "lowcode_varAmbiente",
+            "description": "Variável de ambiente para definir qual o ambiente o aplicarivo está acessando"
+          }
+        }
+      },
+      "triggers": {
+        "manual": {
+          "metadata": {
+            "operationMetadataId": "c900a359-6363-4632-984f-7749f683d518"
+          },
+          "type": "Request",
+          "kind": "PowerAppV2",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "actions": {
+        "Respond_to_a_Power_App_or_flow": {
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "20034e09-8db3-4696-9a5c-6a827ed718bd"
+          },
+          "type": "Response",
+          "kind": "PowerApp",
+          "inputs": {
+            "statusCode": 200,
+            "body": {
+              "ambiente": "@parameters('[Variavel] Default - Ambiente Atual (lowcode_varAmbiente)')"
+            },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ambiente": {
+                  "title": "Ambiente",
+                  "x-ms-dynamically-added": true,
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "templateName": ""
+  },
+  "schemaVersion": "1.0.0.0"
+}

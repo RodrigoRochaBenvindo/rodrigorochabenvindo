@@ -1,0 +1,635 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline-2": {
+        "api": {
+          "name": "shared_sharepointonline"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "lowcode_sharedsharepointonline_98d82"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_office365users": {
+        "api": {
+          "name": "shared_office365users"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "new_sharedoffice365users_80816"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_office365groups_1": {
+        "api": {
+          "name": "shared_office365groups"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "lowcode_ConectorDefaultGruposdoOffice365"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "[Variavel] Default - SIte Equipe Aplicacoes Ageis (lowcode_V_AmbienteMapaDePneus)": {
+          "defaultValue": "https://autoglass365.sharepoint.com/sites/portal-appcorp/equipe",
+          "type": "String",
+          "metadata": {
+            "schemaName": "lowcode_V_AmbienteMapaDePneus"
+          }
+        },
+        "[Variavel] Default - Usuarios (lowcode_shared_sharepointonline_7ef9f660d2f74b8dbf66220cbc2ebc5e)": {
+          "defaultValue": "c30751ee-71f2-47e6-9920-e8a85680c6ff",
+          "type": "String",
+          "metadata": {
+            "schemaName": "lowcode_shared_sharepointonline_7ef9f660d2f74b8dbf66220cbc2ebc5e"
+          }
+        },
+        "[Variavel] Repositorio - Ambiente (lowcode_VariavelRepositorioAmbiente)": {
+          "defaultValue": "Desenvolvimento",
+          "type": "String",
+          "metadata": {
+            "schemaName": "lowcode_VariavelRepositorioAmbiente"
+          }
+        }
+      },
+      "triggers": {
+        "Quando_um_item_é_criado_ou_modificado_nas_lista_AppUsuarios": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "@parameters('[Variavel] Default - SIte Equipe Aplicacoes Ageis (lowcode_V_AmbienteMapaDePneus)')",
+              "table": "@parameters('[Variavel] Default - Usuarios (lowcode_shared_sharepointonline_7ef9f660d2f74b8dbf66220cbc2ebc5e)')"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "operationId": "GetOnUpdatedItems",
+              "connectionName": "shared_sharepointonline-2"
+            }
+          },
+          "recurrence": {
+            "interval": 1,
+            "frequency": "Minute"
+          },
+          "splitOn": "@triggerOutputs()?['body/value']",
+          "metadata": {
+            "operationMetadataId": "3f33453a-8457-4d92-85c5-ab9480930d67"
+          }
+        }
+      },
+      "actions": {
+        "Inicializar_variável_-_varAppEncontrado": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varAppEncontrado",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "3dd5b018-817b-410b-9373-f55fb36e43a0"
+          }
+        },
+        "Inicializar_variável_-_varAplicativoIdObtido": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varAplicativoIDObtido",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Inicializar_variável_-_varAppEncontrado": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "9972a52b-3e33-409d-b8f2-0fb6a5dbb52b"
+          }
+        },
+        "Escopo": {
+          "type": "Scope",
+          "actions": {
+            "Procurar_pelo_Aplicativo": {
+              "type": "Scope",
+              "actions": {
+                "Obter_itens_da_lista_AppAplicativos": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "dataset": "https://autoglass365.sharepoint.com/sites/portal-appcorp/equipe",
+                      "table": "dedfc25f-4581-468d-a4c9-49d795f95167",
+                      "$filter": "Title eq '@{triggerOutputs()?['body/Aplicacao']}'",
+                      "view": "c03b4dae-e2ea-4fe6-8423-6c24031d0340"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                      "operationId": "GetItems",
+                      "connectionName": "shared_sharepointonline-2"
+                    }
+                  },
+                  "metadata": {
+                    "operationMetadataId": "92645ebd-73c9-4bc3-a7e7-080f62dae1ce"
+                  }
+                },
+                "Aplicar_a_cada_item_da_lista_AppAplicativo": {
+                  "type": "Foreach",
+                  "foreach": "@outputs('Obter_itens_da_lista_AppAplicativos')?['body/value']",
+                  "actions": {
+                    "Condição_-_Verificar_se_o_Aplicatico_é_igual_ao_do_Usuário_criado": {
+                      "type": "If",
+                      "expression": {
+                        "equals": [
+                          "@items('Aplicar_a_cada_item_da_lista_AppAplicativo')?['Title']",
+                          "@triggerOutputs()?['body/Aplicacao']"
+                        ]
+                      },
+                      "actions": {
+                        "Obter_os_dados_do_aplicativo_contidos_na_lista_AppAplicativo": {
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "parameters": {
+                              "dataset": "https://autoglass365.sharepoint.com/sites/portal-appcorp/equipe",
+                              "table": "dedfc25f-4581-468d-a4c9-49d795f95167",
+                              "id": "@items('Aplicar_a_cada_item_da_lista_AppAplicativo')?['ID']"
+                            },
+                            "host": {
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                              "operationId": "GetItem",
+                              "connectionName": "shared_sharepointonline-2"
+                            }
+                          },
+                          "metadata": {
+                            "operationMetadataId": "999b0f68-b349-456c-8856-3c1c9e0b6af0"
+                          }
+                        },
+                        "Acrescentar_à_variável_de_cadeia_varAplicarivoIdObtido": {
+                          "type": "AppendToStringVariable",
+                          "inputs": {
+                            "name": "varAplicativoIDObtido",
+                            "value": "@outputs('Obter_os_dados_do_aplicativo_contidos_na_lista_AppAplicativo')?['body/IDGrupo']"
+                          },
+                          "runAfter": {
+                            "Obter_os_dados_do_aplicativo_contidos_na_lista_AppAplicativo": [
+                              "Succeeded"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "30a1df25-fbc3-4bff-8784-7f4c77f9060f"
+                          }
+                        },
+                        "Definir_variável_varAppEncontrado_para_\"TRUE\"_": {
+                          "type": "AppendToStringVariable",
+                          "inputs": {
+                            "name": "varAppEncontrado",
+                            "value": "Sim"
+                          },
+                          "runAfter": {
+                            "Acrescentar_à_variável_de_cadeia_varAplicarivoIdObtido": [
+                              "Succeeded"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "d36b500b-0360-4c7f-823c-80b2095e04c4"
+                          }
+                        }
+                      },
+                      "else": {
+                        "actions": {}
+                      },
+                      "metadata": {
+                        "operationMetadataId": "5f1ec6a7-fc04-492f-83e0-95f1a7c2cebf"
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "Obter_itens_da_lista_AppAplicativos": [
+                      "Succeeded"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "b24f00e9-9e25-4267-9b1f-1942ba37d4c5"
+                  }
+                }
+              },
+              "runAfter": {
+                "Condição_-_Verifica_se_não_é_Produção": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "8c627b06-958a-4957-8932-3f2a4348e23a"
+              }
+            },
+            "Procurando_pelo_Usuário_no_Grupo": {
+              "type": "Scope",
+              "actions": {
+                "Condição_-_Verificar_se_o_Aplicativo_foi_encontrado": {
+                  "type": "If",
+                  "expression": {
+                    "equals": [
+                      "@variables('varAppEncontrado')",
+                      "Sim"
+                    ]
+                  },
+                  "actions": {
+                    "Obter_perfil_do_usuário_(V2)": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "parameters": {
+                          "id": "@triggerOutputs()?['body/Email']"
+                        },
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365users",
+                          "operationId": "UserProfile_V2",
+                          "connectionName": "shared_office365users"
+                        }
+                      },
+                      "metadata": {
+                        "operationMetadataId": "b491532a-4d46-4985-82d2-bff69f8d88df"
+                      }
+                    },
+                    "Listar_os_membros_do_grupo": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "parameters": {
+                          "groupId": "@variables('varAplicativoIDObtido')"
+                        },
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365groups",
+                          "operationId": "ListGroupMembers",
+                          "connectionName": "shared_office365groups_1"
+                        }
+                      },
+                      "runAfter": {
+                        "Obter_perfil_do_usuário_(V2)": [
+                          "Succeeded"
+                        ]
+                      },
+                      "runtimeConfiguration": {
+                        "paginationPolicy": {
+                          "minimumItemCount": 5000
+                        }
+                      },
+                      "metadata": {
+                        "operationMetadataId": "b8ae4e23-2712-4b4d-a65b-6ea9141f7959"
+                      }
+                    },
+                    "Verificar_Usuario_Grupo": {
+                      "type": "Query",
+                      "description": "Verificar se usuário já está cadastrado no grupo correspondente ao aplicativo.",
+                      "inputs": {
+                        "from": "@outputs('Listar_os_membros_do_grupo')?['body/value']",
+                        "where": "@equals(item()?['userPrincipalName'], outputs('Obter_perfil_do_usuário_(V2)')?['body/userPrincipalName'])"
+                      },
+                      "runAfter": {
+                        "Listar_os_membros_do_grupo": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "b774b60a-3a4a-46e9-be5a-be3319e903eb"
+                      }
+                    },
+                    "Condição": {
+                      "type": "If",
+                      "expression": {
+                        "and": [
+                          {
+                            "equals": [
+                              "@empty(body('Verificar_Usuario_Grupo'))",
+                              "@false"
+                            ]
+                          }
+                        ]
+                      },
+                      "actions": {
+                        "Definir_variável": {
+                          "type": "SetVariable",
+                          "inputs": {
+                            "name": "varUsuarioNaoEcontrado",
+                            "value": false
+                          },
+                          "metadata": {
+                            "operationMetadataId": "65bd4626-6bf2-40a9-be3a-68c618092e4d"
+                          }
+                        }
+                      },
+                      "else": {
+                        "actions": {}
+                      },
+                      "runAfter": {
+                        "Verificar_Usuario_Grupo": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "2842f685-d7c9-4163-baeb-1a1df271ad77"
+                      }
+                    }
+                  },
+                  "else": {
+                    "actions": {}
+                  },
+                  "metadata": {
+                    "operationMetadataId": "b0e1b9ea-023b-417b-86d3-24ff21157bb4"
+                  }
+                }
+              },
+              "runAfter": {
+                "Procurar_pelo_Aplicativo": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "6d37725a-313c-453f-a3b0-16cb1ae52a32"
+              }
+            },
+            "Execucao_da_acao_de_adicionar_ou_remover_usuario": {
+              "type": "Scope",
+              "actions": {
+                "Condição_-_Usuario_nao_encontrado_no_grupo": {
+                  "type": "If",
+                  "expression": {
+                    "and": [
+                      {
+                        "equals": [
+                          "@variables('varUsuarioNaoEcontrado')",
+                          "@true"
+                        ]
+                      }
+                    ]
+                  },
+                  "actions": {
+                    "Opção_-_Verifica_Status_de_Adicao": {
+                      "type": "Switch",
+                      "expression": "@triggerBody()?['Title']",
+                      "default": {
+                        "actions": {}
+                      },
+                      "cases": {
+                        "Case_-_Status_for_Ativo": {
+                          "actions": {
+                            "Adicionar_membro_ao_grupo_-_Status_Ativo": {
+                              "type": "OpenApiConnection",
+                              "inputs": {
+                                "parameters": {
+                                  "groupId": "@variables('varAplicativoIDObtido')",
+                                  "userUpn": "@outputs('Obter_perfil_do_usuário_(V2)')?['body/userPrincipalName']"
+                                },
+                                "host": {
+                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365groups",
+                                  "operationId": "AddMemberToGroup",
+                                  "connectionName": "shared_office365groups_1"
+                                }
+                              },
+                              "metadata": {
+                                "operationMetadataId": "92a592ee-0b24-479b-9e92-cb1e1fd3118f"
+                              }
+                            }
+                          },
+                          "case": "Ativo"
+                        },
+                        "Case_-_Status_for_Excluido_": {
+                          "actions": {
+                            "Excluir_item_-_Usuario": {
+                              "type": "OpenApiConnection",
+                              "inputs": {
+                                "parameters": {
+                                  "dataset": "@parameters('[Variavel] Default - SIte Equipe Aplicacoes Ageis (lowcode_V_AmbienteMapaDePneus)')",
+                                  "table": "@parameters('[Variavel] Default - Usuarios (lowcode_shared_sharepointonline_7ef9f660d2f74b8dbf66220cbc2ebc5e)')",
+                                  "id": "@triggerBody()?['ID']"
+                                },
+                                "host": {
+                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                  "operationId": "DeleteItem",
+                                  "connectionName": "shared_sharepointonline-2"
+                                }
+                              },
+                              "metadata": {
+                                "operationMetadataId": "9af7f3fc-559f-4826-bb70-4b59648953b7"
+                              }
+                            }
+                          },
+                          "case": "Excluído"
+                        }
+                      },
+                      "metadata": {
+                        "operationMetadataId": "22c5e952-1f7d-4ee0-9f61-1e83bd9ca67f"
+                      }
+                    }
+                  },
+                  "else": {
+                    "actions": {
+                      "Opção_-_Verifica_os_Status_de_Remocao": {
+                        "type": "Switch",
+                        "expression": "@triggerBody()?['Title']",
+                        "default": {
+                          "actions": {}
+                        },
+                        "cases": {
+                          "Case_-_Status_for_Desativado": {
+                            "actions": {
+                              "Remover_membro_do_grupo_-_Status_Desativado": {
+                                "type": "OpenApiConnection",
+                                "inputs": {
+                                  "parameters": {
+                                    "groupId": "@variables('varAplicativoIDObtido')",
+                                    "userUpn": "@outputs('Obter_perfil_do_usuário_(V2)')?['body/userPrincipalName']"
+                                  },
+                                  "host": {
+                                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365groups",
+                                    "operationId": "RemoveMemberFromGroup",
+                                    "connectionName": "shared_office365groups_1"
+                                  }
+                                },
+                                "metadata": {
+                                  "operationMetadataId": "264e6045-b6bc-4009-b318-f6b5d15c1fe0"
+                                }
+                              }
+                            },
+                            "case": "Desativado"
+                          },
+                          "Case_-_Status_for_Excluido": {
+                            "actions": {
+                              "Remover_membro_do_grupo_-_Status_Excluir": {
+                                "type": "OpenApiConnection",
+                                "inputs": {
+                                  "parameters": {
+                                    "groupId": "@variables('varAplicativoIDObtido')",
+                                    "userUpn": "@outputs('Obter_perfil_do_usuário_(V2)')?['body/userPrincipalName']"
+                                  },
+                                  "host": {
+                                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365groups",
+                                    "operationId": "RemoveMemberFromGroup",
+                                    "connectionName": "shared_office365groups_1"
+                                  }
+                                },
+                                "metadata": {
+                                  "operationMetadataId": "288fc9ce-23f5-464b-b7e1-147e76326d6f"
+                                }
+                              },
+                              "Excluir_item_-_Usuario_": {
+                                "type": "OpenApiConnection",
+                                "inputs": {
+                                  "parameters": {
+                                    "dataset": "@parameters('[Variavel] Default - SIte Equipe Aplicacoes Ageis (lowcode_V_AmbienteMapaDePneus)')",
+                                    "table": "@parameters('[Variavel] Default - Usuarios (lowcode_shared_sharepointonline_7ef9f660d2f74b8dbf66220cbc2ebc5e)')",
+                                    "id": "@triggerBody()?['ID']"
+                                  },
+                                  "host": {
+                                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                    "operationId": "DeleteItem",
+                                    "connectionName": "shared_sharepointonline-2"
+                                  }
+                                },
+                                "runAfter": {
+                                  "Remover_membro_do_grupo_-_Status_Excluir": [
+                                    "Succeeded"
+                                  ]
+                                },
+                                "metadata": {
+                                  "operationMetadataId": "83743b8b-5eef-4547-9099-a69159634ba1"
+                                }
+                              }
+                            },
+                            "case": "Excluído"
+                          }
+                        },
+                        "metadata": {
+                          "operationMetadataId": "fadfaa06-06c0-4932-a159-ee01b2ae1f4a"
+                        }
+                      }
+                    }
+                  },
+                  "metadata": {
+                    "operationMetadataId": "175c11e0-0566-4579-b1eb-757ec3d1a509"
+                  }
+                }
+              },
+              "runAfter": {
+                "Procurando_pelo_Usuário_no_Grupo": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "cf0a4643-e36f-49d3-a29a-eadd05229be5"
+              }
+            },
+            "Condição_-_Verifica_se_não_é_Produção": {
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "not": {
+                      "equals": [
+                        "@parameters('[Variavel] Repositorio - Ambiente (lowcode_VariavelRepositorioAmbiente)')",
+                        "Produção"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "actions": {
+                "Terminar_-_Sucesso": {
+                  "type": "Terminate",
+                  "inputs": {
+                    "runStatus": "Succeeded"
+                  }
+                }
+              },
+              "else": {
+                "actions": {}
+              }
+            }
+          },
+          "runAfter": {
+            "Inicializar_variável_-_varUsuarioNaoEncontrado": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "207a8c84-b663-41a8-b188-a4e63c64c612"
+          }
+        },
+        "Inicializar_variável_-_varUsuarioNaoEncontrado": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varUsuarioNaoEcontrado",
+                "type": "boolean",
+                "value": true
+              }
+            ]
+          },
+          "runAfter": {
+            "Inicializar_variável_-_varAplicativoIdObtido": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "89c898e8-7880-4b46-b80d-9fb8f2233a16"
+          }
+        },
+        "Error": {
+          "type": "Scope",
+          "actions": {
+            "Terminar_-_Error": {
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed",
+                "runError": {
+                  "code": "Error",
+                  "message": "Falha no fluxo, consulte a lista de log."
+                }
+              },
+              "runAfter": {
+                "Executar_um_Fluxo_Filho_-_Error": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Executar_um_Fluxo_Filho_-_Error": {
+              "type": "Workflow",
+              "inputs": {
+                "host": {
+                  "workflowReferenceName": "ca7cb657-34b0-f011-bbd3-00224836f996"
+                },
+                "body": {
+                  "text": "@string(result('Escopo'))",
+                  "text_1": "[Fluxo] Deafult-Automatizado-GerenciamentoDeUsuarios",
+                  "email": "@outputs('Obter_perfil_do_usuário_(V2)')?['body/mail']"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Escopo": [
+              "Failed",
+              "Skipped",
+              "TimedOut"
+            ]
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}
